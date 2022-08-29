@@ -1,8 +1,6 @@
-package com.example.imagecompressionapp.presentation
+package com.example.imagecompressionapp.presentation.file_compression
 
-import android.graphics.pdf.PdfDocument
 import android.net.Uri
-import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -15,40 +13,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.imagecompressionapp.utils.CompressFileUtils
-import com.example.imagecompressionapp.utils.ZipManager.zip
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.imagecompressionapp.domain.file_compression.FileCompressionUIEvent
 import com.example.imagecompressionapp.utils.getFilePathFromUri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
-import java.util.zip.ZipFile
 
 @Composable
-fun FileCompressorComponent() {
-    var fileUri by remember { mutableStateOf<Uri?>(null) }
-    var compressedFileUri by remember { mutableStateOf<Uri?>(null) }
+fun FileCompressorComponent(viewModel: FileCompressionViewModel = viewModel()) {
 
-    var originalFile by remember { mutableStateOf<File?>(null) }
-    var compressedFile by remember { mutableStateOf<ZipFile?>(null) }
-
-    var originalFileSpecs by remember { mutableStateOf<String?>(null) }
-    var compressedFileSpecs by remember { mutableStateOf<String?>(null) }
-
-    var logMessages by remember { mutableStateOf("") }
-
+    val scope = rememberCoroutineScope()
+    val state = viewModel.fileCompressionUiState.value
     val ctx = LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) {  uri: Uri ->
-        fileUri = uri
-        originalFile = File(getFilePathFromUri(ctx, uri, false))
-        originalFile?.let {
-            originalFileSpecs = CompressFileUtils.getFolderSizeLabel(it) + " " +
-                    "\nTipo do arquivo ${it.absolutePath.substring(it.absolutePath.lastIndexOf("."))}"
-        }
-    }
-
-    compressedFile?.let {
-        compressedFileSpecs = "${it.size()} \nArquivo .ZIP"
+        val originalFile = File(getFilePathFromUri(ctx, uri, false))
+        viewModel.onEvent(
+            FileCompressionUIEvent.SetSourceFile(
+                originalFile
+            )
+        )
     }
 
     Column {
@@ -62,7 +49,7 @@ fun FileCompressorComponent() {
                     fontWeight = FontWeight.Light
                 )
 
-                originalFileSpecs?.let{
+                state.originalFileSpecs?.let{
                     Text(
                         text = it,
                         modifier = Modifier.fillMaxWidth(),
@@ -82,7 +69,7 @@ fun FileCompressorComponent() {
                     fontWeight = FontWeight.Light
                 )
 
-                compressedFileSpecs?.let {
+                state.compressedFileSpecs?.let {
                     Text(
                         text = it,
                         modifier = Modifier.fillMaxWidth(),
@@ -103,9 +90,22 @@ fun FileCompressorComponent() {
         }
 
         Button(onClick = {
-            originalFile?.let {
-                zip(arrayOf(it.path), it.name)
-                compressedFile = ZipFile(it)
+            state.sourceFile?.let {
+                scope.launch(Dispatchers.IO) {
+                    val zipName = "test.zip"
+                    val path = ctx.filesDir.path
+                    val pathToFile = "$path/$zipName"
+                    val destinationFile = File(path, zipName)
+
+                    viewModel.onEvent(
+                        FileCompressionUIEvent.CompressFile(
+                            sourceFile = it,
+                            path = path,
+                            pathToFile = pathToFile,
+                            destinyFile = destinationFile
+                        )
+                    )
+                }
             }
         }) {
             Text(text = "File Compress!")

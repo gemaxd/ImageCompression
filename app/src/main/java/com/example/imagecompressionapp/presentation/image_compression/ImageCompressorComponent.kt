@@ -1,15 +1,10 @@
-package com.example.imagecompressionapp.presentation
+package com.example.imagecompressionapp.presentation.image_compression
 
-import android.content.ContentValues.TAG
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
@@ -22,13 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
-import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
-import com.example.imagecompressionapp.MainViewModel
-import com.example.imagecompressionapp.R
-import com.example.imagecompressionapp.domain.UIEvent
+import com.example.imagecompressionapp.domain.image_compression.UIEvent
 import com.example.imagecompressionapp.utils.getDestinationFileForImage
 import com.example.imagecompressionapp.utils.getFilePathFromUri
 import kotlinx.coroutines.Dispatchers
@@ -37,9 +28,9 @@ import java.io.File
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
-fun ImageCompressorComponent(viewModel: MainViewModel = viewModel()) {
+fun ImageCompressorComponent(viewModel: ImageCompressionViewModel = viewModel()) {
 
-    val state = viewModel.uiState.value
+    val state = viewModel.imageCompressionUiState.value
     var compressedImageFile by remember { mutableStateOf<File?>(null) }
     val scope = rememberCoroutineScope()
     val ctx = LocalContext.current

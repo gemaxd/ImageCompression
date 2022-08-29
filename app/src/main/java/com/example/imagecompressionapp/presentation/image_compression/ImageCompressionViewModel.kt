@@ -1,27 +1,27 @@
-package com.example.imagecompressionapp
+package com.example.imagecompressionapp.presentation.image_compression
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.imagecompressionapp.domain.UIEvent
-import com.example.imagecompressionapp.domain.UIState
+import com.example.imagecompressionapp.domain.image_compression.UIEvent
+import com.example.imagecompressionapp.domain.image_compression.ImageCompressionUIState
 import com.example.imagecompressionapp.utils.CompressFileUtils
 import com.example.imagecompressionapp.utils.CompressUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
-class MainViewModel: ViewModel() {
+class ImageCompressionViewModel: ViewModel() {
 
-    private var _uiState = mutableStateOf(UIState())
-    val uiState: State<UIState> = _uiState
+    private var _ImageCompression_uiState = mutableStateOf(ImageCompressionUIState())
+    val imageCompressionUiState: State<ImageCompressionUIState> = _ImageCompression_uiState
 
     fun onEvent(event: UIEvent){
         when(event){
             is UIEvent.CompressImage -> {
-                _uiState.value = _uiState.value.copy(
+                _ImageCompression_uiState.value = _ImageCompression_uiState.value.copy(
                     sourceFileUri = event.sourceFile.toUri(),
                     destinyFileUri = event.destinationFile.toUri()
                 )
@@ -31,7 +31,7 @@ class MainViewModel: ViewModel() {
             }
             is UIEvent.ChangeLog -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    _uiState.value = _uiState.value.copy(
+                    _ImageCompression_uiState.value = _ImageCompression_uiState.value.copy(
                         compressionLog = event.compressionLog
                     )
                 }
@@ -41,7 +41,7 @@ class MainViewModel: ViewModel() {
             }
             is UIEvent.SetSourceFile -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    _uiState.value = _uiState.value.copy(
+                    _ImageCompression_uiState.value = _ImageCompression_uiState.value.copy(
                         sourceFile = event.sourceFile,
                         destinyFile = null,
                         compressionLog = ""
@@ -51,7 +51,7 @@ class MainViewModel: ViewModel() {
 
             is UIEvent.SetDestinyFile -> {
                 viewModelScope.launch(Dispatchers.IO) {
-                    _uiState.value = _uiState.value.copy(
+                    _ImageCompression_uiState.value = _ImageCompression_uiState.value.copy(
                         destinyFile = event.destinyFile
                     )
                 }
@@ -66,7 +66,7 @@ class MainViewModel: ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             _timeSpend.value = CompressUtil.compressImage(sourceFile = sourceFile, destinationFile = destinationFile)
 
-            _uiState.value.let{
+            _ImageCompression_uiState.value.let{
                 val log = StringBuilder()
                     .append("\nCaminho original: ${it.sourceFileUri?.path}")
                     .append("\nTamanho antes da compressão: ${CompressFileUtils.getFolderSizeLabel(sourceFile)}")

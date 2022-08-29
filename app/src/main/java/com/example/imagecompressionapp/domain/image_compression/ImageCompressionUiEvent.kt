@@ -1,4 +1,4 @@
-package com.example.imagecompressionapp.domain
+package com.example.imagecompressionapp.domain.image_compression
 
 import java.io.File
 
