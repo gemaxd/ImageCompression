@@ -9,10 +9,7 @@ import com.example.imagecompressionapp.domain.file_compression.FileCompressionUI
 import com.example.imagecompressionapp.domain.file_compression.FileCompressionUIState
 import com.example.imagecompressionapp.utils.CompressFileUtils.getFolderSizeLabel
 import com.example.imagecompressionapp.utils.ZipManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.File
 
 class FileCompressionViewModel: ViewModel() {
@@ -20,24 +17,29 @@ class FileCompressionViewModel: ViewModel() {
     private var _file_compression_uiState = mutableStateOf(FileCompressionUIState())
     val fileCompressionUiState: State<FileCompressionUIState> = _file_compression_uiState
 
+    private var _compressing = mutableStateOf(false)
+    val compressing = _compressing
+
     fun onEvent(event: FileCompressionUIEvent){
         when(event){
 
             is FileCompressionUIEvent.CompressFile -> {
+                setIsCompressing(true)
                 _file_compression_uiState.value = _file_compression_uiState.value.copy(
                     sourceFileUri = event.sourceFile.toUri()
                 )
                 viewModelScope.launch(Dispatchers.IO) {
                     compressFileAsync(
-                        event.sourceFile,
-                        event.path,
-                        event.pathToFile,
-                        event.destinyFile
+                        sourceFile = event.sourceFile,
+                        path = event.path,
+                        pathToFile = event.pathToFile,
+                        destinyFile = event.destinyFile
                     ).await()
 
                     _file_compression_uiState.value.destinyFile?.let {
                         onEvent(FileCompressionUIEvent.SetDestinyFile(it))
                     }
+                    setIsCompressing()
                 }
             }
 
@@ -99,24 +101,27 @@ class FileCompressionViewModel: ViewModel() {
         }
     }
 
-    private suspend fun mountOriginalFileSpecs(originalFile: File): String{
+    private fun setIsCompressing(status: Boolean = false){
+        _compressing.value = status
+    }
+
+    private fun mountOriginalFileSpecs(originalFile: File): String{
         originalFile.let{
             return getFolderSizeLabel(originalFile) + " " +
                     "\nTipo do arquivo ${it.absolutePath.substring(it.absolutePath.lastIndexOf("."))}"
         }
     }
 
-    private suspend fun mountCompressedFileSpecs(destinationFile: File): String{
+    private fun mountCompressedFileSpecs(destinationFile: File): String{
         destinationFile.let{
             return getFolderSizeLabel(destinationFile) + " " +
                     "\nTipo do arquivo ${it.absolutePath.substring(it.absolutePath.lastIndexOf("."))}"
         }
     }
 
-    private suspend fun compressFileAsync(sourceFile: File, path: String, pathToFile: String, destinyFile: File) = GlobalScope.async{
-
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun compressFileAsync(sourceFile: File, path: String, pathToFile: String, destinyFile: File) = GlobalScope.async{
         ZipManager.zipTest(sourceFile, pathToFile)
-
         _file_compression_uiState.value = _file_compression_uiState.value.copy(
             destinyFile = destinyFile
         )
