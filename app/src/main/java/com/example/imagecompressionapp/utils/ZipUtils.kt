@@ -1,15 +1,11 @@
 package com.example.imagecompressionapp.utils
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 object ZipManager {
-
-    suspend fun zipTest(sourceFile: File, destinationPath: String) {
+    fun zipTest(sourceFile: File, destinationPath: String) {
         val files: Array<String> = arrayOf(sourceFile.path)
         val out = ZipOutputStream(BufferedOutputStream(FileOutputStream(destinationPath)))
         for (file in files) {
